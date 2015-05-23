@@ -11,26 +11,33 @@
 static UInt32 birdGroup = 1 << 0;   // 0001
 static UInt32 objectGroup = 1 << 1; // 0010
 
-@interface GameScene()
+@interface GameScene() <SKPhysicsContactDelegate>
 @property (strong, nonatomic) SKSpriteNode *bird;
-
+@property (strong, nonatomic) SKNode *movingObjects;
+@property (strong, nonatomic) SKLabelNode *gameOver;
 @end
 
 @implementation GameScene
 
 -(void)didMoveToView:(SKView *)view {
     
-    self.physicsWorld.gravity = CGVectorMake(0, -6);
+    self.physicsWorld.gravity = CGVectorMake(0, -14);
+    self.physicsWorld.contactDelegate = self;
+    
+    self.movingObjects = [[SKNode alloc] init];
+    [self addChild:self.movingObjects];
 
     [self createBg];
-    [self createBird];
     [self createFloor];
-    [self createPipes];
+    
+    // Start game after 3 seconds
+    [self performSelector:@selector(createBird) withObject:nil afterDelay:1];
+    [self performSelector:@selector(createPipes) withObject:nil afterDelay:3];
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesBegan:touches withEvent:event];
-    [self.bird.physicsBody applyImpulse:CGVectorMake(0, 120)];
+    [self.bird.physicsBody applyImpulse:CGVectorMake(0, 200)];
     
 }
 
@@ -47,8 +54,9 @@ static UInt32 objectGroup = 1 << 1; // 0010
     self.bird.physicsBody.dynamic = YES;
     self.bird.physicsBody.categoryBitMask = birdGroup;
     self.bird.physicsBody.collisionBitMask = objectGroup;
+    self.bird.physicsBody.contactTestBitMask = objectGroup;
     
-    self.bird.physicsBody.velocity = CGVectorMake(-10, 0);
+    self.bird.physicsBody.allowsRotation = NO;
     
     
     SKTexture *birdTextureUp = [SKTexture textureWithImageNamed:@"flappy1"];
@@ -63,7 +71,8 @@ static UInt32 objectGroup = 1 << 1; // 0010
     [self.bird runAction:fly];
     [self.bird runAction:birdActions];
     
-    [self addChild:self.bird];
+    [self.movingObjects addChild:self.bird];
+    [self.bird.physicsBody applyImpulse:CGVectorMake(0, 300)];
 }
 
 -(void) createBg{
@@ -89,8 +98,8 @@ static UInt32 objectGroup = 1 << 1; // 0010
     [bg2 runAction:bgActions];
     
     
-    [self addChild:bg1];
-    [self addChild:bg2];
+    [self.movingObjects addChild:bg1];
+    [self.movingObjects addChild:bg2];
 }
 
 -(void) createFloor{
@@ -136,10 +145,25 @@ static UInt32 objectGroup = 1 << 1; // 0010
     
     
     
-    [self addChild:pipeUp];
-    [self addChild:pipeDown];
+    [self.movingObjects addChild:pipeUp];
+    [self.movingObjects addChild:pipeDown];
 
     [self performSelector:@selector(createPipes) withObject:nil afterDelay:pipeDistance];
+}
+
+#pragma mark - SKPhysicsContactDelegate
+
+-(void) didBeginContact:(SKPhysicsContact *)contact{
+    NSLog(@"WHATSUP");
+    self.movingObjects.speed = 0;
+    
+    self.gameOver = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
+    self.gameOver.zPosition = 100;
+    self.gameOver.fontColor = [UIColor whiteColor];
+    self.gameOver.fontSize = 30.0f;
+    self.gameOver.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame));
+    self.gameOver.text = @"Game Over";
+    [self addChild:self.gameOver];
 }
 
 @end
