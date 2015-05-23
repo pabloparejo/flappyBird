@@ -16,9 +16,16 @@
     background.size = self.frame.size;
     [self addChild:background];
     
-    SKSpriteNode *bird = [SKSpriteNode spriteNodeWithImageNamed:@"flappy1"];
+    SKSpriteNode *bird = [SKSpriteNode spriteNodeWithImageNamed:@"flappy2"];
     bird.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame));
     [self addChild:bird];
+    
+    
+    SKTexture *birdTextureUp = [SKTexture textureWithImageNamed:@"flappy1"];
+    SKTexture *birdTextureDown = [SKTexture textureWithImageNamed:@"flappy2"];
+    SKAction *fly = [SKAction repeatActionForever:[SKAction animateWithTextures:@[birdTextureUp, birdTextureDown] timePerFrame:0.2f]];
+    
+    [bird runAction:fly];
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
